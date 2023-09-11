@@ -23,12 +23,12 @@ pip install pylint
 ```
 ## Running Project
 
-To run the project, use the following command:
+To run the file, use the following command by replacing fileName:
 ```bash
-python3 helloworld.py
+python3 fileName.py
 ```
 
-To run the pylint, use the following command:
+To run the pylint, use the following command by replacing fileName:
 ```bash
-pylint helloworld.py
+pylint fileName.py
 ```
