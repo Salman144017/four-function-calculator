@@ -77,4 +77,5 @@ def main():
 
 
 # Call main function to start program
-main()
+if __name__ == "__main__":
+    main()
