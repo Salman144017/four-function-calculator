@@ -1,7 +1,7 @@
 """pyQT Four Functiton Calculator"""
 import sys
 from functools import partial
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QProcess, Signal, Slot, QObject
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -14,11 +14,40 @@ from PySide6.QtWidgets import (
 )
 
 
-class CalculatorModel:
+class CalculatorModel(QObject):
     """Calculator Model Class"""
 
+    messageReceived = Signal(str)
+
     def __init__(self):
+        super().__init__()
         self.result = 0
+        self.queue = []
+
+        self.process1 = QProcess()
+        self.process2 = QProcess()
+
+    def start_processes(self):
+        """start processes"""
+        self.process1.start("python3", ["process1.py"])
+        self.process2.start("python3", ["process2.py"])
+
+        self.process1.readyReadStandardOutput.connect(self.handle_output1)
+        self.process2.readyReadStandardOutput.connect(self.handle_output2)
+
+    @Slot()
+    def handle_output1(self):
+        """Handle message from process 1"""
+        message = self.process1.readAllStandardOutput().data().decode()
+        self.queue.append(message)
+        self.messageReceived.emit(message)
+
+    @Slot()
+    def handle_output2(self):
+        """Handle message from process 2"""
+        message = self.process2.readAllStandardOutput().data().decode()
+        self.queue.append(message)
+        self.messageReceived.emit(message)
 
     def add(self, num1, num2):
         """Function to perform addition"""
@@ -126,13 +155,16 @@ class CalculatorView(QMainWindow):
             self.result_display.setText(current_text + text)
 
 
-class CalculatorController:
+class CalculatorController(QObject):
     """Calculator Controller Class"""
 
     def __init__(self, model_init, view_init):
+        super().__init__()
         self.model = model_init
         self.view = view_init
         self.view.set_controller(self)
+        self.model.start_processes()
+        self.model.messageReceived.connect(self.print_message)
 
         self.operand1 = ""
         self.operand2 = ""
@@ -213,6 +245,10 @@ class CalculatorController:
         self.operator = ""
         self.is_first_operand = True
         self.view.result_display.setText("0")
+
+    def print_message(self, message):
+        """print message"""
+        print(message)
 
 
 if __name__ == "__main__":
